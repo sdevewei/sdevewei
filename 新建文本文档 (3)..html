@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作用个人网页</title>
+    <style>
+        /* CSS 样式 */
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .menu ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .menu ul li {
+            display: inline-block;
+            position: relative;
+        }
+
+        .menu ul li a {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .menu ul li ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+        }
+
+        .menu ul li:hover ul {
+            display: block;
+        }
+
+        .menu ul li ul li {
+            display: block;
+        }
+
+        #content {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"] {
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        input[readonly] {
+            background-color: #f9f9f9;
+            cursor: not-allowed;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .status-completed {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- HTML 结构 -->
+    <div class="menu">
+        <ul>
+            <li><a href="#">系统</a>
+                <ul>
+                    <li><a href="#" data-menu="携程">携程</a></li>
+                    <li><a href="#" data-menu="众信">众信</a></li>
+                    <li><a href="#" data-menu="百事通">百事通</a></li>
+                </ul>
+            </li>
+            <li><a href="#">客户</a>
+                <ul>
+                    <li><a href="#" data-menu="个人客户">个人客户</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <div id="content">
+        <!-- 三级菜单内容将动态加载到这里 -->
+    </div>
+
+    <script>
+        // JavaScript 功能
+        document.addEventListener('DOMContentLoaded', function () {
+            const menuLinks = document.querySelectorAll('.menu a[data-menu]');
+            const contentDiv = document.getElementById('content');
+
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const menuName = this.getAttribute('data-menu');
+                    loadMenuContent(menuName);
+                });
+            });
+
+            function loadMenuContent(menuName) {
+                let content = '';
+
+                if (menuName === '携程' || menuName === '众信' || menuName === '百事通' || menuName === '个人客户') {
+                    content = `
+                        <h2>${menuName}</h2>
+                        <div class="input-section">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>门店/客户名称</th>
+                                        <th>出团日期</th>
+                                        <th>行程名称</th>
+                                        <th>人数（成人）</th>
+                                        <th>人数（儿童）</th>
+                                        <th>应收款项</th>
+                                        <th>已收款项</th>
+                                        <th>未收款项</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="input-row">
+                                    <tr>
+                                        <td><input type="text" name="store_name"></td>
+                                        <td><input type="date" name="tour_date"></td>
+                                        <td><input type="text" name="tour_name"></td>
+                                        <td><input type="number" name="adults"></td>
+                                        <td><input type="number" name="children"></td>
+                                        <td><input type="number" name="receivable"></td>
+                                        <td><input type="number" name="received"></td>
+                                        <td><input type="number" name="unreceived" readonly></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button onclick="addRow()">添加</button>
+                        </div>
+                        <div class="data-section">
+                            <h3>已添加的数据</h3>
+                            <table id="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>门店/客户名称</th>
+                                        <th>出团日期</th>
+                                        <th>行程名称</th>
+                                        <th>人数（成人）</th>
+                                        <th>人数（儿童）</th>
+                                        <th>应收款项</th>
+                                        <th>已收款项</th>
+                                        <th>未收款项</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- 动态添加的数据将显示在这里 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+
+                contentDiv.innerHTML = content;
+
+                // 为输入框添加监听器
+                attachInputListeners();
+            }
+
+            function attachInputListeners() {
+                const receivableInput = document.querySelector('input[name="receivable"]');
+                const receivedInput = document.querySelector('input[name="received"]');
+                const unreceivedInput = document.querySelector('input[name="unreceived"]');
+
+                if (receivableInput && receivedInput && unreceivedInput) {
+                    receivableInput.addEventListener('input', calculateUnreceived);
+                    receivedInput.addEventListener('input', calculateUnreceived);
+                }
+            }
+
+            function calculateUnreceived() {
+                const receivable = parseFloat(document.querySelector('input[name="receivable"]').value) || 0;
+                const received = parseFloat(document.querySelector('input[name="received"]').value) || 0;
+                const unreceived = receivable - received;
+                document.querySelector('input[name="unreceived"]').value = unreceived.toFixed(2);
+            }
+
+            window.addRow = function () {
+                // 获取输入框的值
+                const storeName = document.querySelector('input[name="store_name"]').value;
+                const tourDate = document.querySelector('input[name="tour_date"]').value;
+                const tourName = document.querySelector('input[name="tour_name"]').value;
+                const adults = document.querySelector('input[name="adults"]').value;
+                const children = document.querySelector('input[name="children"]').value;
+                const receivable = document.querySelector('input[name="receivable"]').value;
+                const received = document.querySelector('input[name="received"]').value;
+                const unreceived = document.querySelector('input[name="unreceived"]').value;
+
+                // 验证输入是否为空
+                if (!storeName || !tourDate || !tourName || !adults || !children || !receivable || !received || !unreceived) {
+                    alert("请填写所有字段！");
+                    return;
+                }
+
+                // 计算状态
+                const status = parseFloat(unreceived) === 0 ? '已收完' : '未收完';
+                const statusClass = parseFloat(unreceived) === 0 ? 'status-completed' : 'status-pending';
+
+                // 将数据添加到表格中
+                const dataTable = document.querySelector('#data-table tbody');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${storeName}</td>
+                    <td>${tourDate}</td>
+                    <td>${tourName}</td>
+                    <td>${adults}</td>
+                    <td>${children}</td>
+                    <td>${receivable}</td>
+                    <td>${received}</td>
+                    <td><input type="number" class="editable-unreceived" value="${unreceived}" oninput="updateReceived(this)"></td>
+                    <td class="${statusClass}">${status}</td>
+                `;
+                dataTable.appendChild(newRow);
+
+                // 清空输入框
+                document.querySelector('input[name="store_name"]').value = '';
+                document.querySelector('input[name="tour_date"]').value = '';
+                document.querySelector('input[name="tour_name"]').value = '';
+                document.querySelector('input[name="adults"]').value = '';
+                document.querySelector('input[name="children"]').value = '';
+                document.querySelector('input[name="receivable"]').value = '';
+                document.querySelector('input[name="received"]').value = '';
+                document.querySelector('input[name="unreceived"]').value = '';
+            };
+
+            window.updateReceived = function (input) {
+                const row = input.closest('tr');
+                const receivable = parseFloat(row.querySelector('td:nth-child(6)').textContent) || 0;
+                const unreceived = parseFloat(input.value) || 0;
+                const received = receivable - unreceived;
+                row.querySelector('td:nth-child(7)').textContent = received.toFixed(2);
+
+                // 更新状态
+                const statusCell = row.querySelector('td:nth-child(9)');
+                if (unreceived === 0) {
+                    statusCell.textContent = '已收完';
+                    statusCell.className = 'status-completed';
+                } else {
+                    statusCell.textContent = '未收完';
+                    statusCell.className = 'status-pending';
+                }
+            };
+        });
+    </script>
+</body>
+</html>
